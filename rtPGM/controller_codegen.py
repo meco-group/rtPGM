@@ -283,8 +283,9 @@ def shift_codegen(self, f):
 
 def rtPGM_codegen(self, path='rtPGM.h'):
     f = open(path, 'w')
-    f.write('#ifndef RTPGM_H\n')
-    f.write('#define RTPGM_H\n')
+    include_guard = path.split('.')[0].upper() + '_H'
+    f.write('#ifndef %s\n' % include_guard)
+    f.write('#define %s\n' % include_guard)
     f.write('class rtPGM {\n')
     f.write('\tprivate:\n')
     f.write('\t\tfloat _q[%d];\n' % self.N*self.nu)
@@ -335,8 +336,9 @@ def rtPGM_codegen(self, path='rtPGM.h'):
 
 def PGM_codegen(self, path='PGM.h'):
     f = open(path, 'w')
-    f.write('#ifndef PGM_H\n')
-    f.write('#define PGM_H\n')
+    include_guard = path.split('.')[0].upper() + '_H'
+    f.write('#ifndef %s\n' % include_guard)
+    f.write('#define %s\n' % include_guard)
     f.write('class PGM {\n')
     f.write('\tprivate:\n')
     f.write('\t\tfloat _q[%d];\n' % self.N*self.nu)
@@ -455,8 +457,9 @@ def update_LQR_codegen(self, f):
 
 def LQR_codegen(self, path='LQR.h'):
     f = open(path, 'w')
-    f.write('#ifndef LQR_H\n')
-    f.write('#define LQR_H\n')
+    include_guard = path.split('.')[0].upper() + '_H'
+    f.write('#ifndef %s\n' % include_guard)
+    f.write('#define %s\n' % include_guard)
     f.write('class LQR {\n')
     f.write('\tprivate:\n')
     if self.integral_fb:
