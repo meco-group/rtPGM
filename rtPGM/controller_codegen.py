@@ -390,10 +390,10 @@ def PGM_codegen(self, path='PGM.h'):
 
 
 def residual_codegen(self, f):
-    f.write('\t\tdouble residual(float* q1, float* q0) {\n')
+    f.write('\t\tfloat residual(float* q1, float* q0) {\n')
     y = mul_cg2((self.F - (1./self.gamma)*np.eye(self.N*self.nu)), 'q1', '-q0')
-    f.write('\t\t\tdouble res = 0;\n')
-    f.write('\t\t\tdouble dres;\n')
+    f.write('\t\t\tfloat res = 0;\n')
+    f.write('\t\t\tfloat dres;\n')
     for k in range(self.nu*self.N):
         f.write('\t\t\tdres = %s;\n' % y[k])
         f.write('\t\t\tres += dres*dres;\n')
