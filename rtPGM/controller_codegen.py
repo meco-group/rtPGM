@@ -283,7 +283,7 @@ def shift_codegen(self, f):
 
 def rtPGM_codegen(self, path='rtPGM.h'):
     f = open(path, 'w')
-    include_guard = path.split('.')[0].upper() + '_H'
+    include_guard = path.split('.')[0].split('/')[-1].upper() + '_H'
     f.write('#ifndef %s\n' % include_guard)
     f.write('#define %s\n' % include_guard)
     f.write('class rtPGM {\n')
@@ -337,6 +337,7 @@ def rtPGM_codegen(self, path='rtPGM.h'):
 def PGM_codegen(self, path='PGM.h'):
     f = open(path, 'w')
     include_guard = path.split('.')[0].upper() + '_H'
+    include_guard = path.split('.')[0].split('/')[-1].upper() + '_H'
     f.write('#ifndef %s\n' % include_guard)
     f.write('#define %s\n' % include_guard)
     f.write('class PGM {\n')
@@ -404,7 +405,7 @@ def residual_codegen(self, f):
 def update_PGM_codegen(self, f):
     f.write('\t\tbool update(float* x, float* r, float* u) {\n')
     f.write('\t\t\tint cnt = 0;\n')
-    f.write('\t\t\tint q0[%d];\n' % self.N)
+    f.write('\t\t\tfloat q0[%d];\n' % self.N)
     f.write('\t\t\twhile (true) {\n')
     f.write(copy_cg(self, '_q', 'q0', nt=4))
     f.write('\t\t\t\tgradient_step(x, r);\n')
@@ -414,11 +415,11 @@ def update_PGM_codegen(self, f):
     f.write('\t\t\t\tif (++cnt > %d) {\n' % self.max_iter)
     f.write('\t\t\t\t\tbreak;\n')
     f.write('\t\t\t\t}\n')
-    f.write('\t\t\t\tif (residual(_q, q0) > %.8g) {\n' % self.tol**2)
+    f.write('\t\t\t\tif (residual(_q, q0) < %.8g) {\n' % self.tol**2)
     f.write('\t\t\t\t\tbreak;\n')
     f.write('\t\t\t\t}\n')
     f.write('\t\t\t}\n')
-    f.write('\t\t\t\*u = _q[0];\n')
+    f.write('\t\t\t*u = _q[0];\n')
     f.write('\t\t\tshift();\n')
     if self.integral_fb:
         y = mul_cg(self.C[:, :self.nx - self.ny], 'x')
@@ -457,7 +458,7 @@ def update_LQR_codegen(self, f):
 
 def LQR_codegen(self, path='LQR.h'):
     f = open(path, 'w')
-    include_guard = path.split('.')[0].upper() + '_H'
+    include_guard = path.split('.')[0].split('/')[-1].upper() + '_H'
     f.write('#ifndef %s\n' % include_guard)
     f.write('#define %s\n' % include_guard)
     f.write('class LQR {\n')
