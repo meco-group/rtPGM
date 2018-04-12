@@ -4,7 +4,7 @@
 # Copyright (C) 2018 Ruben Van Parys, KU Leuven.
 # All rights reserved.
 #
-# OMG-tools is free software; you can redistribute it and/or
+# rtPGM is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
 # License as published by the Free Software Foundation; either
 # version 3 of the License, or (at your option) any later version.
@@ -322,7 +322,7 @@ class rtPGM(MPC):
                 ret[k, 0] = umax
         return ret
 
-    def project(self, q, x, r, umin, umax, tol=1e-3, verbose=0, good_broyder=False):
+    def project(self, q, x, r, umin, umax, tol=1e-3, verbose=0, good_broyden=False):
         a = self.a
         aainv = self.aainv
         b = self.Su.T.dot(- self.aN.dot(x - self.Tx.dot(r)))
@@ -367,7 +367,7 @@ class rtPGM(MPC):
                 df = f1 - f0
                 if np.linalg.norm(df, 2) < 1e-12:
                     raise ValueError('Infeasible problem!')
-                if good_broyder:  # good broyden
+                if good_broyden:  # good broyden
                     Jinv = Jinv + \
                         ((dlam - Jinv.dot(df)) /
                          (dlam.T.dot(Jinv).dot(df))).dot(dlam.T.dot(Jinv))

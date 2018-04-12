@@ -4,7 +4,7 @@
 # Copyright (C) 2018 Ruben Van Parys, KU Leuven.
 # All rights reserved.
 #
-# OMG-tools is free software; you can redistribute it and/or
+# rtPGM is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
 # License as published by the Free Software Foundation; either
 # version 3 of the License, or (at your option) any later version.
