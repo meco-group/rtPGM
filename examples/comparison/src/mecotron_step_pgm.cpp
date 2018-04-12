@@ -62,7 +62,7 @@ int main(int argc, char* argv[]) {
             auto end = std::chrono::high_resolution_clock::now() - begin;
             long long nanoseconds = chrono::duration_cast<std::chrono::nanoseconds>(end).count();
             double microseconds = static_cast<double>(nanoseconds)/1000.;
-            ts[it] += microseconds/n_trials;
+            ts[it] += microseconds*1e-6/n_trials;
             if (verbose) {
                 printf("%3d | %1.4g ms\n", it, microseconds/1000.);
             }

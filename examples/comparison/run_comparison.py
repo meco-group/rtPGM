@@ -40,7 +40,7 @@ for ap in approaches:
 print 'Results:'
 for ap in approaches:
     print '\t* %s' % ap
-    print '\t\t- average solve time = %f ms' % (sum([ts*1e-3 for ts in data[ap]['ts']])/len(data[ap]['ts']))
+    print '\t\t- average solve time = %.3g s' % (sum([ts for ts in data[ap]['ts']])/len(data[ap]['ts']))
     if ap != 'rtpgm' and 'rtpgm' in approaches:
         rho = 1e5
         r = 0.12
@@ -73,7 +73,7 @@ plt.xlim([0, tmax])
 plt.ylabel('u (m/s)')
 plt.subplot(5, 1, 5)
 for ap in approaches:
-    plt.semilogy(data[ap]['t'], data[ap]['ts']/1e6)
+    plt.semilogy(data[ap]['t'], data[ap]['ts'])
 plt.xlim([0, tmax])
 plt.xlabel('t (s)')
 plt.ylabel('t_s (s)')

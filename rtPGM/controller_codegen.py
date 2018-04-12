@@ -87,6 +87,7 @@ def project_codegen(self, f):
     f.write('\t\tbool project(float* x, float* r) {\n')
     if n == 0 or not self.terminal_constraint:
         f.write(sat_cg(self))
+        f.write('\t\t\t_n_it_proj = 1;\n')
         f.write('\t\t\treturn true;\n')
     elif n == 1:
         if self.integral_fb:
@@ -129,6 +130,7 @@ def project_codegen(self, f):
         f.write('\t\t\t\tcnt++;\n')
         f.write('\t\t\t}\n')
         f.write(copy_cg(self, 'q', '_q'))
+        f.write('\t\t\t_n_it_proj = cnt;\n')
         f.write('\t\t\treturn true;\n')
     else:
         f.write('\t\t\tfloat b[%d];\n' % n)
@@ -234,6 +236,7 @@ def project_codegen(self, f):
         f.write('\t\t\t\tcnt++;\n')
         f.write('\t\t\t}\n')
         f.write(copy_cg(self, 'q', '_q'))
+        f.write('\t\t\t_n_it_proj = cnt;\n')
         f.write('\t\t\treturn true;\n')
     f.write('\t\t}\n')
 
@@ -289,6 +292,7 @@ def rtPGM_codegen(self, path='rtPGM.h'):
     f.write('class rtPGM {\n')
     f.write('\tprivate:\n')
     f.write('\t\tfloat _q[%d];\n' % self.N*self.nu)
+    f.write('\t\tint _n_it_proj;\n')
     if self.integral_fb:
         f.write('\t\tfloat _e_int[%d];\n' % self.ny)
     f.write('\n')
@@ -312,7 +316,7 @@ def rtPGM_codegen(self, path='rtPGM.h'):
     shift_codegen(self, f)
     f.write('\n')
     f.write('\tpublic:\n')
-    f.write('\t\trtPGM() { reset(); }\n\n')
+    f.write('\t\trtPGM() : _n_it_proj(0) { reset(); }\n\n')
     f.write('\t\tvoid reset() {\n')
     f.write('\t\t\tfor (int k=0; k<%d; k++) {\n' % self.N)
     f.write('\t\t\t\t_q[k] = 0.0f;\n')
@@ -323,6 +327,9 @@ def rtPGM_codegen(self, path='rtPGM.h'):
     f.write('\t\t}\n\n')
     f.write('\t\tint N() {\n')
     f.write('\t\t\treturn %d;\n' % self.N)
+    f.write('\t\t}\n\n')
+    f.write('\t\tint n_it_proj() {\n')
+    f.write('\t\t\treturn _n_it_proj;\n')
     f.write('\t\t}\n\n')
     f.write('\t\tvoid input_trajectory(float* q) {\n')
     f.write(copy_cg(self, '_q', 'q'))
@@ -343,6 +350,7 @@ def PGM_codegen(self, path='PGM.h'):
     f.write('class PGM {\n')
     f.write('\tprivate:\n')
     f.write('\t\tfloat _q[%d];\n' % self.N*self.nu)
+    f.write('\t\tint _n_it_proj;\n')
     if self.integral_fb:
         f.write('\t\tfloat _e_int[%d];\n' % self.ny)
     f.write('\n')
@@ -368,7 +376,7 @@ def PGM_codegen(self, path='PGM.h'):
     residual_codegen(self, f)
     f.write('\n')
     f.write('\tpublic:\n')
-    f.write('\t\tPGM() { reset(); }\n\n')
+    f.write('\t\tPGM() : _n_it_proj(0) { reset(); }\n\n')
     f.write('\t\tvoid reset() {\n')
     f.write('\t\t\tfor (int k=0; k<%d; k++) {\n' % self.N)
     f.write('\t\t\t\t_q[k] = 0.0f;\n')
@@ -379,6 +387,9 @@ def PGM_codegen(self, path='PGM.h'):
     f.write('\t\t}\n\n')
     f.write('\t\tint N() {\n')
     f.write('\t\t\treturn %d;\n' % self.N)
+    f.write('\t\t}\n\n')
+    f.write('\t\tint n_it_proj() {\n')
+    f.write('\t\t\treturn _n_it_proj;\n')
     f.write('\t\t}\n\n')
     f.write('\t\tvoid input_trajectory(float* q) {\n')
     f.write(copy_cg(self, '_q', 'q'))

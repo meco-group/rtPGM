@@ -39,8 +39,8 @@ int main(int argc, char* argv[]) {
         ts[it] = 0.;
     }
     ofstream file;
-    file.open("qpoases.csv");
-    file << "t,theta,position,pendulum_position,velocity,u,ts\n";
+    file.open("rtpgm.csv");
+    file << "t,theta,position,pendulum_position,velocity,u,ts,n_it_proj\n";
     for (int tr=0; tr<n_trials; tr++) {
         if (verbose) {
             printf("\nTrial %2d/%2d\n", tr+1, n_trials);
@@ -61,15 +61,17 @@ int main(int argc, char* argv[]) {
             auto end = std::chrono::high_resolution_clock::now() - begin;
             long long nanoseconds = chrono::duration_cast<std::chrono::nanoseconds>(end).count();
             double microseconds = static_cast<double>(nanoseconds)/1000.;
-            ts[it] += microseconds/n_trials;
+            ts[it] += microseconds*1e-6/n_trials;
             if (verbose) {
                 printf("%3d | %1.4g ms\n", it, microseconds/1000.);
             }
             system.update(u);
             system.state(x);
             system.output(u, y);
-            file << Ts*it << "," << y[0] << "," << y[1] << "," << y[2] << ",";
-            file << y[3] << "," << u[0] << "," << ts[it] << "\n";
+            if (tr == n_trials-1) {
+                file << Ts*it << "," << y[0] << "," << y[1] << "," << y[2] << ",";
+                file << y[3] << "," << u[0] << "," << ts[it] << "," << controller.n_it_proj() << "\n";
+            }
         }
     }
     file.close();

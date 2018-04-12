@@ -3,6 +3,7 @@
 class rtPGM {
 	private:
 		float _q[20];
+		int _n_it_proj;
 
 		float fabs(float value) {
 			return (value >= 0.0f) ? value : -value;
@@ -94,6 +95,7 @@ class rtPGM {
 			for (int k=0; k<20; k++) {
 				_q[k] = q[k];
 			}
+			_n_it_proj = cnt;
 			return true;
 		}
 
@@ -105,7 +107,7 @@ class rtPGM {
 		}
 
 	public:
-		rtPGM() { reset(); }
+		rtPGM() : _n_it_proj(0) { reset(); }
 
 		void reset() {
 			for (int k=0; k<20; k++) {
@@ -115,6 +117,10 @@ class rtPGM {
 
 		int N() {
 			return 20;
+		}
+
+		int n_it_proj() {
+			return _n_it_proj;
 		}
 
 		void input_trajectory(float* q) {

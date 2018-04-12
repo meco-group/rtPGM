@@ -18,7 +18,7 @@ N = 20
 Q = 10000.*np.eye(nx)
 R = 1.*np.eye(nq)
 controller = rtPGM(A, B, C, D, Q, R, umin, umax, N)
-# controller = PGM(A, B, C, D, Q, R, umin, umax, N,)
+# controller = PGM(A, B, C, D, Q, R, umin, umax, N)
 # controller = LQR(A, B, C, D, Q, R)
 
 # mpc iterates
