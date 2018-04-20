@@ -40,7 +40,7 @@ qi = 1.
 controller = rtPGM(A, B, C, D, Q, R, umin, umax, N, terminal_constraint_tol=1e-8)
 # controller = PGM(A, B, C, D, Q, R, umin, umax, N, terminal_constraint_tol=1e-8, tol=1e-2, max_iter=5000)
 # controller = LQR(A, B, C, D, Q, R)
-controller.codegen()
+# controller.codegen()
 
 # mpc iterates
 n_it = int(2./Ts)

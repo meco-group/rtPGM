@@ -10,6 +10,7 @@ using namespace std;
 int main(int argc, char* argv[]) {
     bool verbose = true;
     int n_trials = 1;
+    std::string filename = "rtpgm.csv";
 
     for (int i=0; i<argc; ++i) {
         std::string arg = argv[i];
@@ -18,6 +19,9 @@ int main(int argc, char* argv[]) {
         }
         else if (((arg == "-t") || (arg == "--trials")) && (i+1 < argc)) {
             n_trials = stoi(std::string(argv[++i]));
+        }
+        else if (((arg == "-f")  || (arg == "--filename")) && (i+1 < argc)) {
+            filename = std::string(argv[++i]);
         }
     }
 
@@ -30,6 +34,8 @@ int main(int argc, char* argv[]) {
     float y[system.ny()];
     float u[system.nu()];
 
+    long long times[3];
+
     float r = 0.12;
     system.state(x);
 
@@ -39,8 +45,8 @@ int main(int argc, char* argv[]) {
         ts[it] = 0.;
     }
     ofstream file;
-    file.open("rtpgm.csv");
-    file << "t,theta,position,pendulum_position,velocity,u,ts,n_it_proj\n";
+    file.open(filename);
+    file << "t,theta,position,pendulum_position,velocity,u,ts,n_it_proj,grad_time,proj_time\n";
     for (int tr=0; tr<n_trials; tr++) {
         if (verbose) {
             printf("\nTrial %2d/%2d\n", tr+1, n_trials);
@@ -68,9 +74,19 @@ int main(int argc, char* argv[]) {
             system.update(u);
             system.state(x);
             system.output(u, y);
+            controller.time_analysis(times);
+            double t0 = static_cast<double>(times[0]);
+            double t1 = static_cast<double>(times[1]);
+            double t2 = static_cast<double>(times[2]);
+            // printf("%f\n", t2);
+            double t_sum = t0+t1+t2;
+            printf("%d - %f - %f\n", controller.n_it_proj(), t0/t_sum, t1/t_sum);
+            // printf("%f - %f - %f - %f\n", t0, t1, t2, t0+t1+t2);
             if (tr == n_trials-1) {
                 file << Ts*it << "," << y[0] << "," << y[1] << "," << y[2] << ",";
-                file << y[3] << "," << u[0] << "," << ts[it] << "," << controller.n_it_proj() << "\n";
+                file << y[3] << "," << u[0] << "," << ts[it] << ",";
+                file << controller.n_it_proj() << ",";
+                file << t0/t_sum << "," << t1/t_sum << "\n";
             }
         }
     }

@@ -1,8 +1,7 @@
 import csv
 from scipy.signal import cont2discrete
-import csv
 import numpy as np
-from rtPGM.controller import rtPGM, PGM
+from rtPGM.controller import rtPGM
 
 
 def load_model(model):
@@ -16,17 +15,6 @@ def load_model(model):
             out.append(np.array([[float(r) for r in rw] for rw in rows[ind+1: ind+1+nx]]))
             ind = ind+nx+1
     return out[0], out[1], out[2], out[3]
-
-
-def dump_model(model, A, B, Q, R, x_ss):
-    mat = [A, B, Q, R, x_ss]
-    with open(model, 'w') as f:
-        for m in mat:
-            f.write('%d %d\n' % (m.shape[0], m.shape[1]))
-            for k in range(m.shape[0]):
-                for l in range(m.shape[1]):
-                    f.write('%.9f ' % m[k, l])
-                f.write('\n')
 
 
 def lti_codegen(A, B, C, D, Q, R, umin, umax, Tx, CN, Ts, name='lti', path=None):
@@ -201,10 +189,4 @@ if __name__ == '__main__':
     Q = rho*C.T.dot(C)
     R = np.eye(nq)
     controller = rtPGM(A, B, C, D, Q, R, umin, umax, N, terminal_constraint_tol=1e-8)
-
-    controller.update(np.c_[0,0,0,0].T, 0.12)
-
-    controller.codegen('src/rtPGM.h')
-    controller = PGM(A, B, C, D, Q, R, umin, umax, N, terminal_constraint_tol=1e-8, tol=1e-2)
-    controller.codegen('src/PGM.h')
     lti_codegen(A, B, CC, DD, Q, R, [umin], [umax], controller.Tx, controller.Su.T, Ts, 'mecotron', 'src/mecotron.h')

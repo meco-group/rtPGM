@@ -15,14 +15,13 @@
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
 
-
-#define N 20
-
 using namespace std;
 
 int main(int argc, char* argv[]) {
     bool verbose = true;
     int n_trials = 1;
+    int N = 20;
+    std::string filename = "hpmpc.csv";
 
     for (int i=0; i<argc; ++i) {
         std::string arg = argv[i];
@@ -31,6 +30,12 @@ int main(int argc, char* argv[]) {
         }
         else if (((arg == "-t") || (arg == "--trials")) && (i+1 < argc)) {
             n_trials = stoi(std::string(argv[++i]));
+        }
+        else if ((arg == "-N") && (i+1 < argc)) {
+            N = stoi(std::string(argv[++i]));
+        }
+        else if (((arg == "-f")  || (arg == "--filename")) && (i+1 < argc)) {
+            filename = std::string(argv[++i]);
         }
     }
 
@@ -146,7 +151,7 @@ int main(int argc, char* argv[]) {
         ts[it] = 0.;
     }
     ofstream file;
-    file.open("hpmpc.csv");
+    file.open(filename);
     file << "t,theta,position,pendulum_position,velocity,u,ts\n";
     for (int tr=0; tr<n_trials; tr++) {
         // setup solver

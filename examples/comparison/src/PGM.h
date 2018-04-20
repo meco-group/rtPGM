@@ -189,7 +189,7 @@ class PGM {
 				if (++cnt > 1000) {
 					break;
 				}
-				if (residual(_q, q0) < 0.0001) {
+				if (residual(_q, q0) < 1e-08) {
 					break;
 				}
 			}
