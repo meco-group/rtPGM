@@ -1,9 +1,11 @@
 #ifndef RTPGM_H
 #define RTPGM_H
+#include  <chrono>
 class rtPGM {
 	private:
 		float _q[20];
 		int _n_it_proj;
+		long long _times[3];
 
 		float fabs(float value) {
 			return (value >= 0.0f) ? value : -value;
@@ -123,6 +125,12 @@ class rtPGM {
 			return _n_it_proj;
 		}
 
+		void time_analysis(long long* times) { 
+			times[0] = _times[0];
+			times[1] = _times[1];
+			times[2] = _times[2];
+		}
+
 		void input_trajectory(float* q) {
 			for (int k=0; k<20; k++) {
 				q[k] = _q[k];
@@ -130,12 +138,21 @@ class rtPGM {
 		}
 
 		bool update(float* x, float* r, float* u) {
+			auto begin = std::chrono::high_resolution_clock::now();
 			gradient_step(x, r);
+			auto end = std::chrono::high_resolution_clock::now() - begin;
+			_times[0] = std::chrono::duration_cast<std::chrono::nanoseconds>(end).count();
+			begin = std::chrono::high_resolution_clock::now();
 			if (!project(x, r)) {
 				return false;
 			}
+			end = std::chrono::high_resolution_clock::now() - begin;
+			_times[1] = std::chrono::duration_cast<std::chrono::nanoseconds>(end).count();
+			begin = std::chrono::high_resolution_clock::now();
 			*u = _q[0];
 			shift();
+			end = std::chrono::high_resolution_clock::now() - begin;
+			_times[2] = std::chrono::duration_cast<std::chrono::nanoseconds>(end).count();
 			return true;
 		}
 

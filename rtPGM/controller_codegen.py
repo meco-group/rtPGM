@@ -259,18 +259,33 @@ def gradientstep_codegen(self, f):
     f.write('\t\t}\n')
 
 
-def update_rtPGM_codegen(self, f):
+def update_rtPGM_codegen(self, f, time_analysis=False):
     f.write('\t\tbool update(float* x, float* r, float* u) {\n')
+    if time_analysis:
+        f.write('\t\t\tauto begin = std::chrono::high_resolution_clock::now();\n')
     f.write('\t\t\tgradient_step(x, r);\n')
+    if time_analysis:
+        f.write('\t\t\tauto end = std::chrono::high_resolution_clock::now() - begin;\n')
+        f.write('\t\t\t_times[0] = std::chrono::duration_cast<std::chrono::nanoseconds>(end).count();\n')
+    if time_analysis:
+        f.write('\t\t\tbegin = std::chrono::high_resolution_clock::now();\n')
     f.write('\t\t\tif (!project(x, r)) {\n')
     f.write('\t\t\t\treturn false;\n')
     f.write('\t\t\t}\n')
+    if time_analysis:
+        f.write('\t\t\tend = std::chrono::high_resolution_clock::now() - begin;\n')
+        f.write('\t\t\t_times[1] = std::chrono::duration_cast<std::chrono::nanoseconds>(end).count();\n')
+    if time_analysis:
+        f.write('\t\t\tbegin = std::chrono::high_resolution_clock::now();\n')
     f.write('\t\t\t*u = _q[0];\n')
     f.write('\t\t\tshift();\n')
     if self.integral_fb:
         y = mul_cg(self.C[:, :self.nx - self.ny], 'x')
         for k in range(self.ny):
             f.write('\t\t\t_e_int[%d] += %s - r[%d];\n' % (k, y[k], k))
+    if time_analysis:
+        f.write('\t\t\tend = std::chrono::high_resolution_clock::now() - begin;\n')
+        f.write('\t\t\t_times[2] = std::chrono::duration_cast<std::chrono::nanoseconds>(end).count();\n')
     f.write('\t\t\treturn true;\n')
     f.write('\t\t}\n')
 
@@ -284,17 +299,21 @@ def shift_codegen(self, f):
     f.write('\t\t}\n')
 
 
-def rtPGM_codegen(self, path='rtPGM.h'):
+def rtPGM_codegen(self, path='rtPGM.h', time_analysis=False):
     f = open(path, 'w')
     include_guard = path.split('.')[0].split('/')[-1].upper() + '_H'
     f.write('#ifndef %s\n' % include_guard)
     f.write('#define %s\n' % include_guard)
+    if time_analysis:
+        f.write('#include  <chrono>\n')
     f.write('class rtPGM {\n')
     f.write('\tprivate:\n')
     f.write('\t\tfloat _q[%d];\n' % self.N*self.nu)
     f.write('\t\tint _n_it_proj;\n')
     if self.integral_fb:
         f.write('\t\tfloat _e_int[%d];\n' % self.ny)
+    if time_analysis:
+        f.write('\t\tlong long _times[3];\n')
     f.write('\n')
     f.write('\t\tfloat fabs(float value) {\n')
     f.write('\t\t\treturn (value >= 0.0f) ? value : -value;\n')
@@ -331,10 +350,15 @@ def rtPGM_codegen(self, path='rtPGM.h'):
     f.write('\t\tint n_it_proj() {\n')
     f.write('\t\t\treturn _n_it_proj;\n')
     f.write('\t\t}\n\n')
+    if time_analysis:
+        f.write('\t\tvoid time_analysis(long long* times) { \n')
+        for k in range(3):
+            f.write('\t\t\ttimes[%d] = _times[%d];\n' % (k, k))
+        f.write('\t\t}\n\n')
     f.write('\t\tvoid input_trajectory(float* q) {\n')
     f.write(copy_cg(self, '_q', 'q'))
     f.write('\t\t}\n\n')
-    update_rtPGM_codegen(self, f)
+    update_rtPGM_codegen(self, f, time_analysis)
     f.write('\n')
     f.write('};\n')
     f.write('#endif\n')
