@@ -34,6 +34,9 @@ for N in horizons:
         if ap == 'rtpgm':
             subprocess.check_output("./rtpgm_codegen.py -N %d" % N, shell=True)
             subprocess.check_output("cd build && make && cd ..", shell=True)
+        if ap == 'pgm':
+            subprocess.check_output("./pgm_codegen.py -N %d" % N, shell=True)
+            subprocess.check_output("cd build && make && cd ..", shell=True)
         subprocess.check_output("./build/%s_%s -v 0 -t 1000 -f %s -N %d" % (base, ap, '%s_%d.csv' % (ap, N), N), shell=True, stderr=subprocess.STDOUT)
 
     data = {}

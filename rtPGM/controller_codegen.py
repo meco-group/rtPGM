@@ -374,6 +374,7 @@ def PGM_codegen(self, path='PGM.h'):
     f.write('class PGM {\n')
     f.write('\tprivate:\n')
     f.write('\t\tfloat _q[%d];\n' % self.N*self.nu)
+    f.write('\t\tint _n_iter;\n')
     f.write('\t\tint _n_it_proj;\n')
     if self.integral_fb:
         f.write('\t\tfloat _e_int[%d];\n' % self.ny)
@@ -400,7 +401,7 @@ def PGM_codegen(self, path='PGM.h'):
     residual_codegen(self, f)
     f.write('\n')
     f.write('\tpublic:\n')
-    f.write('\t\tPGM() : _n_it_proj(0) { reset(); }\n\n')
+    f.write('\t\tPGM() : _n_iter(0), _n_it_proj(0) { reset(); }\n\n')
     f.write('\t\tvoid reset() {\n')
     f.write('\t\t\tfor (int k=0; k<%d; k++) {\n' % self.N)
     f.write('\t\t\t\t_q[k] = 0.0f;\n')
@@ -411,6 +412,9 @@ def PGM_codegen(self, path='PGM.h'):
     f.write('\t\t}\n\n')
     f.write('\t\tint N() {\n')
     f.write('\t\t\treturn %d;\n' % self.N)
+    f.write('\t\t}\n\n')
+    f.write('\t\tint n_iter() {\n')
+    f.write('\t\t\treturn _n_iter;\n')
     f.write('\t\t}\n\n')
     f.write('\t\tint n_it_proj() {\n')
     f.write('\t\t\treturn _n_it_proj;\n')
@@ -439,7 +443,7 @@ def residual_codegen(self, f):
 
 def update_PGM_codegen(self, f):
     f.write('\t\tbool update(float* x, float* r, float* u) {\n')
-    f.write('\t\t\tint cnt = 0;\n')
+    f.write('\t\t\t_n_iter = 0;\n')
     f.write('\t\t\tfloat q0[%d];\n' % self.N)
     f.write('\t\t\twhile (true) {\n')
     f.write(copy_cg(self, '_q', 'q0', nt=4))
@@ -447,7 +451,7 @@ def update_PGM_codegen(self, f):
     f.write('\t\t\t\tif (!project(x, r)) {\n')
     f.write('\t\t\t\t\treturn false;\n')
     f.write('\t\t\t\t}\n')
-    f.write('\t\t\t\tif (++cnt > %d) {\n' % self.max_iter)
+    f.write('\t\t\t\tif (++_n_iter >= %d) {\n' % self.max_iter)
     f.write('\t\t\t\t\tbreak;\n')
     f.write('\t\t\t\t}\n')
     f.write('\t\t\t\tif (residual(_q, q0) < %.8g) {\n' % self.tol**2)
@@ -512,6 +516,7 @@ def LQR_codegen(self, path='LQR.h'):
     f.write('};\n')
     f.write('#endif\n')
     f.close()
+
 
 rtPGM.codegen = rtPGM_codegen
 PGM.codegen = PGM_codegen
