@@ -66,6 +66,23 @@ int main() {
     return 0;
 }
 ```
+## Experimental validation
+The real-time PGM is implemented on an Arduino micro-controller to control the pendulum of the [mecotron](https://github.com/meco-group/mecotron). Click on a picture to watch the Youtube video.
+
+<table style="border: none; border-collapse: collapse;" border="0" cellspacing="0" cellpadding="0" width="100%" align="center">
+<tr>
+<td align="center" valign="center" style="background-color:rgba(0, 0, 0, 0);">
+<a href="https://www.youtube.com/watch?v=-XRa8bHNVRI">
+<img src="https://img.youtube.com/vi/-XRa8bHNVRI/0.jpg" alt="Reference tracking pendulum"/>
+</a>
+</td>
+<td align="center" valign="center" bgcolor="#FFFFFF">
+<a href="https://www.youtube.com/watch?v=9mA5GPTmSVM">
+<img src="https://img.youtube.com/vi/9mA5GPTmSVM/0.jpg" alt="Inverted pendulum control"/>
+</a>
+</td>
+</tr>
+</table>
 
 ## Installation
 rtPGM is written in Python 2.7 and depends on the packages `numpy`, `scipy` and `matplotlib`:
