@@ -1,4 +1,5 @@
 #include "mecotron.h"
+#include "mecotron_nl.h"
 #include <iostream>
 #include <fstream>
 #include <chrono>
@@ -22,24 +23,34 @@ int main(int argc, char* argv[]) {
     int n_trials = 1;
     int N = 20;
     std::string filename = "qpoases.csv";
+    bool nonlinear = true;
 
     for (int i=0; i<argc; ++i) {
         std::string arg = argv[i];
         if (((arg == "-v") || (arg == "--verbose")) && (i+1 < argc)) {
             verbose = (std::string(argv[++i]) == "1");
+            continue;
         }
         else if (((arg == "-t") || (arg == "--trials")) && (i+1 < argc)) {
             n_trials = stoi(std::string(argv[++i]));
+            continue;
         }
         else if ((arg == "-N") && (i+1 < argc)) {
             N = stoi(std::string(argv[++i]));
+            continue;
         }
         else if (((arg == "-f")  || (arg == "--filename")) && (i+1 < argc)) {
             filename = std::string(argv[++i]);
+            continue;
+        }
+        else if (((arg == "-n") || (arg == "--nonlinear")) && (i+1 < argc)) {
+            nonlinear = (std::string(argv[++i]) == "1");
+            continue;
         }
     }
 
     Mecotron system;
+    Mecotron_nl system_nl;
 
     int n_it = 100;
     float Ts = system.Ts();
@@ -170,10 +181,13 @@ int main(int argc, char* argv[]) {
         void *mem = malloc(mem_size);
         ocp_qp_condensing_qpoases_memory *qpoases_mem;
         ocp_qp_condensing_qpoases_assign_memory(qp_in, qpoases_args, (void **)&qpoases_mem, mem);
-        system.reset();
-        system.state(x);
-
-
+        if (nonlinear) {
+            system_nl.reset();
+            system_nl.state(x);
+        } else {
+            system.reset();
+            system.state(x);
+        }
         // mpc iterations
         int ret;
         if (verbose) {
@@ -197,9 +211,15 @@ int main(int argc, char* argv[]) {
             for (int i=0; i<nu; i++) {
                 u[i] = qp_out->u[0][i];
             }
-            system.update(u);
-            system.state(x);
-            system.output(u, y);
+            if (nonlinear) {
+                system_nl.update(u);
+                system_nl.state(x);
+                system_nl.output(u, y);
+            } else {
+                system.update(u);
+                system.state(x);
+                system.output(u, y);
+            }
             if (tr == n_trials-1) {
                 file << Ts*it << "," << y[0] << "," << y[1] << "," << y[2] << ",";
                 file << y[3] << "," << u[0] << "," << ts[it] << "\n";

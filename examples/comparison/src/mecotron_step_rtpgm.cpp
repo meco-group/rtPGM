@@ -1,4 +1,5 @@
 #include "mecotron.h"
+#include "mecotron_nl.h"
 #include "rtPGM.h"
 #include <iostream>
 #include <fstream>
@@ -11,21 +12,35 @@ int main(int argc, char* argv[]) {
     bool verbose = true;
     int n_trials = 1;
     std::string filename = "rtpgm.csv";
+    bool nonlinear = true;
 
     for (int i=0; i<argc; ++i) {
         std::string arg = argv[i];
         if (((arg == "-v") || (arg == "--verbose")) && (i+1 < argc)) {
             verbose = (std::string(argv[++i]) == "1");
+            continue;
+        }
+        else if (((arg == "-n") || (arg == "--nonlinear")) && (i+1 < argc)) {
+            nonlinear = (std::string(argv[++i]) == "1");
+            continue;
         }
         else if (((arg == "-t") || (arg == "--trials")) && (i+1 < argc)) {
             n_trials = stoi(std::string(argv[++i]));
+            continue;
         }
-        else if (((arg == "-f")  || (arg == "--filename")) && (i+1 < argc)) {
+        else if (((arg == "-f") || (arg == "--filename")) && (i+1 < argc)) {
             filename = std::string(argv[++i]);
+            continue;
         }
     }
 
+    std::cout << "verbose: " << verbose << std::endl;
+    std::cout << "nonlinear: " << nonlinear << std::endl;
+    std::cout << "filename: " << filename << std::endl;
+    std::cout << "n_trials: " << n_trials << std::endl;
+
     Mecotron system;
+    Mecotron_nl system_nl;
     rtPGM controller;
 
     int n_it = 100;
@@ -37,7 +52,6 @@ int main(int argc, char* argv[]) {
     long long times[3];
 
     float r = 0.12;
-    system.state(x);
 
     // trials
     double ts[n_it];
@@ -52,9 +66,14 @@ int main(int argc, char* argv[]) {
             printf("\nTrial %2d/%2d\n", tr+1, n_trials);
             printf("***********\n\n");
         }
-        system.reset();
+        if (nonlinear) {
+            system_nl.reset();
+            system_nl.state(x);
+        } else {
+            system.reset();
+            system.state(x);
+        }
         controller.reset();
-        system.state(x);
         // mpc iterations
         int ret;
         if (verbose) {
@@ -71,9 +90,15 @@ int main(int argc, char* argv[]) {
             if (verbose) {
                 printf("%3d | %1.4g ms\n", it, microseconds/1000.);
             }
-            system.update(u);
-            system.state(x);
-            system.output(u, y);
+            if (nonlinear) {
+                system_nl.update(u);
+                system_nl.state(x);
+                system_nl.output(u, y);
+            } else {
+                system.update(u);
+                system.state(x);
+                system.output(u, y);
+            }
             controller.time_analysis(times);
             double t0 = static_cast<double>(times[0]);
             double t1 = static_cast<double>(times[1]);

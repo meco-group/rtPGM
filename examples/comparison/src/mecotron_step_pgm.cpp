@@ -1,4 +1,5 @@
 #include "mecotron.h"
+#include "mecotron_nl.h"
 #include "PGM.h"
 #include <iostream>
 #include <fstream>
@@ -11,21 +12,30 @@ int main(int argc, char* argv[]) {
     bool verbose = true;
     int n_trials = 1;
     std::string filename = "pgm.csv";
+    bool nonlinear = true;
 
     for (int i=0; i<argc; ++i) {
         std::string arg = argv[i];
         if (((arg == "-v") || (arg == "--verbose")) && (i+1 < argc)) {
             verbose = (std::string(argv[++i]) == "1");
+            continue;
+        }
+        else if (((arg == "-n") || (arg == "--nonlinear")) && (i+1 < argc)) {
+            nonlinear = (std::string(argv[++i]) == "1");
+            continue;
         }
         else if (((arg == "-t") || (arg == "--trials")) && (i+1 < argc)) {
             n_trials = stoi(std::string(argv[++i]));
+            continue;
         }
-        else if (((arg == "-f")  || (arg == "--filename")) && (i+1 < argc)) {
+        else if (((arg == "-f") || (arg == "--filename")) && (i+1 < argc)) {
             filename = std::string(argv[++i]);
+            continue;
         }
     }
 
     Mecotron system;
+    Mecotron_nl system_nl;
     PGM controller;
 
     int n_it = 100;
@@ -35,7 +45,6 @@ int main(int argc, char* argv[]) {
     float u[system.nu()];
 
     float r = 0.12;
-    system.state(x);
 
     // trials
     double ts[n_it];
@@ -51,10 +60,14 @@ int main(int argc, char* argv[]) {
             printf("\nTrial %2d/%2d\n", tr+1, n_trials);
             printf("***********\n\n");
         }
-        system.reset();
+        if (nonlinear) {
+            system_nl.reset();
+            system_nl.state(x);
+        } else {
+            system.reset();
+            system.state(x);
+        }
         controller.reset();
-        system.state(x);
-
         // mpc iterations
         int n_it = 100;
         int ret;
@@ -76,9 +89,15 @@ int main(int argc, char* argv[]) {
             if (n_iter >= 200000) {
                 printf("Maximum iterations exceeded!\n");
             }
-            system.update(u);
-            system.state(x);
-            system.output(u, y);
+            if (nonlinear) {
+                system_nl.update(u);
+                system_nl.state(x);
+                system_nl.output(u, y);
+            } else {
+                system.update(u);
+                system.state(x);
+                system.output(u, y);
+            }
             if (tr == n_trials-1) {
                 file << Ts*it << "," << y[0] << "," << y[1] << "," << y[2] << ",";
                 file << y[3] << "," << u[0] << "," << ts[it] << ",";

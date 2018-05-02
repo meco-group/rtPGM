@@ -37,7 +37,7 @@ for N in horizons:
         if ap == 'pgm':
             subprocess.check_output("./pgm_codegen.py -N %d" % N, shell=True)
             subprocess.check_output("cd build && make && cd ..", shell=True)
-        subprocess.check_output("./build/%s_%s -v 0 -t 1000 -f %s -N %d" % (base, ap, '%s_%d.csv' % (ap, N), N), shell=True, stderr=subprocess.STDOUT)
+        subprocess.check_output("./build/%s_%s -v 0 -t 100 -f %s -n 1 -N %d" % (base, ap, '%s_%d.csv' % (ap, N), N), shell=True, stderr=subprocess.STDOUT)
 
     data = {}
     for ap in approaches:

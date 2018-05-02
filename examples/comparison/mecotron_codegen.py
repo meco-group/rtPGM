@@ -173,6 +173,65 @@ def lti_codegen(A, B, C, D, Q, R, umin, umax, Tx, CN, Ts, name='lti', path=None)
     f.close()
 
 
+def nonlinear_codegen(g, c, l, tau, Ts, ts, Tf, C, D, name='nonlinear', path=None):
+    if path is None:
+        path = name + '.h'
+    nx = 4
+    nu = B.shape[1]
+    ny = C.shape[0]
+    f = open(path, 'w')
+    include_guard = name.upper() + '_H'
+    f.write('#ifndef %s\n' % include_guard)
+    f.write('#define %s\n' % include_guard)
+    f.write('#include <math.h>\n')
+    f.write('class %s {\n' % name.capitalize())
+    f.write('\tprivate:\n')
+    f.write('\t\tdouble _x[%d];\n' % nx)
+    f.write('\t\tvoid update1(float* u) {\n')
+    f.write('\t\t\tfloat x_prev[%d];\n' % nx)
+    f.write('\t\t\tfor (int k=0; k<%d; ++k) {\n' % nx)
+    f.write('\t\t\t\tx_prev[k] = _x[k];\n')
+    f.write('\t\t\t}\n')
+    f.write('\t\t\t_x[0] = x_prev[0] + %f*x_prev[1];\n' % (ts))
+    f.write('\t\t\t_x[1] = x_prev[1] + (%f)*(-x_prev[1] + u[0]);\n' % (ts/tau))
+    f.write('\t\t\t_x[2] = x_prev[2] + %f*x_prev[3];\n' % (ts))
+    f.write('\t\t\t_x[3] = x_prev[3] + (%f)*((cos(x_prev[2])/%f)*(-x_prev[1] + u[0]) - %f*sin(x_prev[2]) - %f*x_prev[3]);\n' % (ts/l, tau, g, c))
+    f.write('\t\t}\n')
+    f.write('\tpublic:\n')
+    f.write('\t\t%s() {\n' % name.capitalize())
+    f.write('\t\t\treset();\n')
+    f.write('\t\t}\n')
+    f.write('\t\tvoid reset() {\n')
+    f.write('\t\t\tfor (int k=0; k<%d; ++k) {\n' % nx)
+    f.write('\t\t\t\t_x[k] = 0.0f;\n')
+    f.write('\t\t\t}\n')
+    f.write('\t\t}\n')
+    f.write('\t\tvoid update(float* u) {\n')
+    f.write('\t\t\tfor (int k=0; k<%d; k++) {\n' % (int(Ts/ts)))
+    f.write('\t\t\t\tupdate1(u);\n')
+    f.write('\t\t\t}\n')
+    f.write('\t\t}\n')
+    f.write('\t\tvoid state(float* x) {\n')
+    for k in range(nx):
+        f.write('\t\t\tx[%d] =' % k)
+        for l in range(nx):
+            f.write(' + %f*_x[%d]' % (Tf[k, l], l))
+        f.write(';\n')
+    f.write('\t\t}\n')
+    f.write('\t\tvoid output(float* u, float* y) {\n')
+    for k in range(ny):
+        f.write('\t\t\ty[%d] =' % k)
+        for l in range(nx):
+            f.write(' + %f*_x[%d]' % (C[k, l], l))
+        for l in range(nu):
+            f.write(' + %f*u[%d]' % (D[k, l], l))
+        f.write(';\n')
+    f.write('\t\t}\n')
+    f.write('};\n')
+    f.write('#endif\n')
+    f.close()
+
+
 if __name__ == '__main__':
     Ts = 0.02
     Ac, Bc, Cc, Dc = load_model('../data/mecotron.txt')
@@ -190,3 +249,11 @@ if __name__ == '__main__':
     R = np.eye(nq)
     controller = rtPGM(A, B, C, D, Q, R, umin, umax, N, terminal_constraint_tol=1e-8)
     lti_codegen(A, B, CC, DD, Q, R, [umin], [umax], controller.Tx, controller.Su.T, Ts, 'mecotron', 'src/mecotron.h')
+    # nonlinear simulation model
+    Tfinv = np.vstack((CC[1, :], CC[4, :], CC[0, :], CC[3, :]))
+    Tf = np.linalg.inv(Tfinv)
+    g = 9.81
+    c = 0.1955
+    l = 0.13
+    tau = 0.1
+    nonlinear_codegen(g, c, l, tau, Ts, 0.002, Tf, CC.dot(Tf), DD, 'mecotron_nl', 'src/mecotron_nl.h')
