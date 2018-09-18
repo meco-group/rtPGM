@@ -142,6 +142,21 @@ class LQR(StateFeedback):
         self.Klqr = fsf.gain_matrix
 
 
+class SaturatedLQR(LQR):
+    def __init__(self, A, B, C, D, Q, R, umin, umax, S=None, **kwargs):
+        LQR.__init__(self, A, B, C, D, Q, R, S, **kwargs)
+        self.umin = umin
+        self.umax = umax
+
+    def update(self, x, r=None):
+        u = LQR.update(self, x, r)
+        if u < self.umin:
+            return np.c_[self.umin]
+        if u > self.umax:
+            return np.c_[self.umax]
+        return u
+
+
 class MPC(StateFeedback):
     def __init__(self, A, B, C, D, Q, R, N=100, S=None, **kwargs):
         StateFeedback.__init__(self, A, B, C, D, Q, R, S, **kwargs)

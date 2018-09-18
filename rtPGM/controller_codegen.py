@@ -18,7 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 
-from controller import rtPGM, PGM, LQR
+from controller import rtPGM, PGM, LQR, SaturatedLQR
 import numpy as np
 
 
@@ -477,7 +477,7 @@ def update_LQR_codegen(self, f):
             f.write('\t\t\t*u = %s + %s;\n' % (u1[0], u2[0]))
         else:
             for k in range(self.Klqr.shape[0]):
-                f.write('\t\t\tu[%d] = %s + %s;\n' % (u1[k], u2[k]))
+                f.write('\t\t\tu[%d] = %s + %s;\n' % (k, u1[k], u2[k]))
     else:
         nx = self.nx - self.ny
         u1a = mul_cg(-self.Klqr[:, :nx], 'x')
@@ -487,7 +487,58 @@ def update_LQR_codegen(self, f):
             f.write('\t\t\t*u = %s + %s + %s;\n' % (u1a[0], u1b[0], u2[0]))
         else:
             for k in range(self.Klqr.shape[0]):
+                f.write('\t\t\tu[%d] = %s + %s + %s;\n' % (k, u1a[k], u1b[k], u2[k]))
+        y = mul_cg(self.C[:, :nx], 'x')
+        for k in range(self.ny):
+            f.write('\t\t\t_e_int[%d] += %s - r[%d];\n' % (k, y[k], k))
+    f.write('\t\t\treturn true;\n')
+    f.write('\t\t}\n\n')
+
+
+def update_SaturatedLQR_codegen(self, f):
+    f.write('\t\tbool update(float* x, float* r, float* u) {\n')
+    if not self.integral_fb:
+        u1 = mul_cg(-self.Klqr, 'x')
+        u2 = mul_cg(self.Klqr.dot(self.Tx)+self.Tu, 'r')
+        if self.Klqr.shape[0] == 1:
+            f.write('\t\t\t*u = %s + %s;\n' % (u1[0], u2[0]))
+            f.write('\t\t\tif (*u < %f) {\n' % self.umin)
+            f.write('\t\t\t\t*u = %f;\n' % self.umin)
+            f.write('\t\t\t}\n')
+            f.write('\t\t\tif (*u > %f) {\n' % self.umax)
+            f.write('\t\t\t\t*u = %f;\n' % self.umax)
+            f.write('\t\t\t}\n')
+        else:
+            for k in range(self.Klqr.shape[0]):
+                f.write('\t\t\tu[%d] = %s + %s;\n' % (k, u1[k], u2[k]))
+                f.write('\t\t\tif (u[%d] < %f) {\n' % (k, self.umin))
+                f.write('\t\t\t\tu = %f;\n' % self.umin)
+                f.write('\t\t\t}\n')
+                f.write('\t\t\tif (u[%d] > %f) {\n' % (k, self.umax))
+                f.write('\t\t\t\tu = %f;\n' % self.umax)
+                f.write('\t\t\t}\n')
+    else:
+        nx = self.nx - self.ny
+        u1a = mul_cg(-self.Klqr[:, :nx], 'x')
+        u1b = mul_cg(-self.Klqr[:, nx:], '_e_int')
+        u2 = mul_cg(self.Klqr[:, :nx].dot(self.Tx[:nx, :]+self.Tu[:nx, :]), 'r')
+        if self.Klqr.shape[0] == 1:
+            f.write('\t\t\t*u = %s + %s + %s;\n' % (u1a[0], u1b[0], u2[0]))
+            f.write('\t\t\tif (*u < %f) {\n' % self.umin)
+            f.write('\t\t\t\t*u = umin;\n')
+            f.write('\t\t\t}\n')
+            f.write('\t\t\tif (*u > %f) {\n' % self.umax)
+            f.write('\t\t\t\t*u = umax;\n')
+            f.write('\t\t\t}\n')
+        else:
+            for k in range(self.Klqr.shape[0]):
                 f.write('\t\t\tu[%d] = %s + %s + %s;\n' % (u1a[k], u1b[k], u2[k]))
+                f.write('\t\t\tif (u[%d] < %f) {\n' % (k, self.umin))
+                f.write('\t\t\t\tu = umin;\n')
+                f.write('\t\t\t}\n')
+                f.write('\t\t\tif (u[%d] > %f) {\n' % (k, self.umax))
+                f.write('\t\t\t\tu = umax;\n')
+                f.write('\t\t\t}\n')
         y = mul_cg(self.C[:, :nx], 'x')
         for k in range(self.ny):
             f.write('\t\t\t_e_int[%d] += %s - r[%d];\n' % (k, y[k], k))
@@ -518,6 +569,31 @@ def LQR_codegen(self, path='LQR.h'):
     f.close()
 
 
+def SaturatedLQR_codegen(self, path='saturatedLQR.h'):
+    f = open(path, 'w')
+    include_guard = path.split('.')[0].split('/')[-1].upper() + '_H'
+    f.write('#ifndef %s\n' % include_guard)
+    f.write('#define %s\n' % include_guard)
+    f.write('class SaturatedLQR {\n')
+    f.write('\tprivate:\n')
+    if self.integral_fb:
+        f.write('\t\tfloat _e_int[%d];\n' % self.ny)
+    f.write('\tpublic:\n')
+    f.write('\t\tSaturatedLQR() { reset(); }\n\n')
+    f.write('\t\tvoid reset() {\n')
+    if self.integral_fb:
+        f.write('\t\t\tfor (int k=0; k<%d; k++) {\n' % self.ny)
+        f.write('\t\t\t\t_e_int[k] = 0.0f;\n')
+        f.write('\t\t\t}\n')
+    f.write('\t\t}\n\n')
+    update_SaturatedLQR_codegen(self, f)
+    f.write('};\n')
+    f.write('#endif\n')
+    f.close()
+
+
+
 rtPGM.codegen = rtPGM_codegen
 PGM.codegen = PGM_codegen
 LQR.codegen = LQR_codegen
+SaturatedLQR.codegen = SaturatedLQR_codegen
