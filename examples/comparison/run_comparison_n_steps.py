@@ -28,6 +28,7 @@ def get_dict(file):
 approaches = [False, True, True]
 
 n_steps = [2, 3, 4, 5, 6, 7, 8, 9, 10]
+n_steps = [2]
 # default model
 Ts = 0.02
 Ac, Bc, Cc, Dc = load_model('../data/mecotron.txt')
@@ -65,7 +66,6 @@ obj = sum(rho*(r - ref['pendulum_position'])**2 + ref['u']**2)/n_it
 for ns in n_steps:
     print '\nn_it = %d' % ns
     print '--------'
-    data[ns] = {}
     if approaches[0]:
         # 1 pgm step in Ts/ns with horizon N
         Ts2 = Ts/ns
@@ -184,7 +184,7 @@ for ns, d in data.items():
         if approaches[k]:
             plt.plot(d[k]['t'], d[k]['velocity'])
 plt.xlim([0, tmax])
-plt.ylabel('x (m)')
+plt.ylabel('velocity (m)')
 plt.subplot(3, 1, 3)
 plt.plot(ref['t'], ref['u'], 'k--')
 for ns, d in data.items():

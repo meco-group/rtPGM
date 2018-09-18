@@ -94,13 +94,13 @@ int main(int argc, char* argv[]) {
                 printf("Maximum iterations exceeded!\n");
             }
             if (nonlinear) {
+                system_nl.output(u, y);
                 system_nl.update(u);
                 system_nl.state(x);
-                system_nl.output(u, y);
             } else {
+                system.output(u, y);
                 system.update(u);
                 system.state(x);
-                system.output(u, y);
             }
             if (tr == n_trials-1) {
                 file << Ts*it << "," << y[0] << "," << y[1] << "," << y[2] << ",";

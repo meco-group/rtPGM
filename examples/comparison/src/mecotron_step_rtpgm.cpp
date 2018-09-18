@@ -96,13 +96,13 @@ int main(int argc, char* argv[]) {
                 printf("%3d | %1.4g ms\n", it, microseconds/1000.);
             }
             if (nonlinear) {
+                system_nl.output(u, y);
                 system_nl.update(u);
                 system_nl.state(x);
-                system_nl.output(u, y);
             } else {
+                system.output(u, y);
                 system.update(u);
                 system.state(x);
-                system.output(u, y);
             }
             controller.time_analysis(times);
             double t0 = static_cast<double>(times[0]);
