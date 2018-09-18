@@ -13,6 +13,7 @@ int main(int argc, char* argv[]) {
     int n_trials = 1;
     std::string filename = "pgm.csv";
     bool nonlinear = true;
+    int n_it = 100;
 
     for (int i=0; i<argc; ++i) {
         std::string arg = argv[i];
@@ -32,13 +33,16 @@ int main(int argc, char* argv[]) {
             filename = std::string(argv[++i]);
             continue;
         }
+        else if (((arg == "-i") || (arg == "--iterations")) && (i+1 < argc)) {
+            n_it = stoi(std::string(argv[++i]));
+            continue;
+        }
     }
 
     Mecotron system;
     Mecotron_nl system_nl;
     PGM controller;
 
-    int n_it = 100;
     float Ts = system.Ts();
     float x[system.nx()];
     float y[system.ny()];
@@ -100,7 +104,7 @@ int main(int argc, char* argv[]) {
             }
             if (tr == n_trials-1) {
                 file << Ts*it << "," << y[0] << "," << y[1] << "," << y[2] << ",";
-                file << y[3] << "," << u[0] << "," << ts[it] << ",";
+                file << y[4] << "," << u[0] << "," << ts[it] << ",";
                 file << controller.n_it_proj() << "," << n_iter << "\n";
             }
         }

@@ -13,6 +13,7 @@ int main(int argc, char* argv[]) {
     int n_trials = 1;
     std::string filename = "rtpgm.csv";
     bool nonlinear = true;
+    int n_it = 100;
 
     for (int i=0; i<argc; ++i) {
         std::string arg = argv[i];
@@ -32,18 +33,22 @@ int main(int argc, char* argv[]) {
             filename = std::string(argv[++i]);
             continue;
         }
+        else if (((arg == "-i") || (arg == "--iterations")) && (i+1 < argc)) {
+            n_it = stoi(std::string(argv[++i]));
+            continue;
+        }
     }
 
     std::cout << "verbose: " << verbose << std::endl;
     std::cout << "nonlinear: " << nonlinear << std::endl;
     std::cout << "filename: " << filename << std::endl;
     std::cout << "n_trials: " << n_trials << std::endl;
+    std::cout << "n_it: " << n_it << std::endl;
 
     Mecotron system;
     Mecotron_nl system_nl;
     rtPGM controller;
 
-    int n_it = 100;
     float Ts = system.Ts();
     float x[system.nx()];
     float y[system.ny()];
@@ -109,7 +114,7 @@ int main(int argc, char* argv[]) {
             // printf("%f - %f - %f - %f\n", t0, t1, t2, t0+t1+t2);
             if (tr == n_trials-1) {
                 file << Ts*it << "," << y[0] << "," << y[1] << "," << y[2] << ",";
-                file << y[3] << "," << u[0] << "," << ts[it] << ",";
+                file << y[4] << "," << u[0] << "," << ts[it] << ",";
                 file << controller.n_it_proj() << ",";
                 file << t0/t_sum << "," << t1/t_sum << "\n";
             }
