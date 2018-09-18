@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 import csv
 from scipy.signal import cont2discrete
 import numpy as np
@@ -177,7 +179,7 @@ def nonlinear_codegen(g, c, l, tau, Ts, ts, Tf, C, D, name='nonlinear', path=Non
     if path is None:
         path = name + '.h'
     nx = 4
-    nu = B.shape[1]
+    nu = D.shape[1]
     ny = C.shape[0]
     f = open(path, 'w')
     include_guard = name.upper() + '_H'

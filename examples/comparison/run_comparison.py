@@ -27,17 +27,21 @@ approaches = ['rtpgm', 'hpmpc', 'qpoases']
 horizons = [20]
 base = 'mecotron_step'
 
+subprocess.check_output("python ./mecotron_codegen.py", shell=True)
 for N in horizons:
     print 'Simulating mpc for N = %d:' % N
     for ap in approaches:
         print '\t* %s' % ap
         if ap == 'rtpgm':
             subprocess.check_output("./rtpgm_codegen.py -N %d" % N, shell=True)
-            subprocess.check_output("cd build && make && cd ..", shell=True)
         if ap == 'pgm':
             subprocess.check_output("./pgm_codegen.py -N %d" % N, shell=True)
-            subprocess.check_output("cd build && make && cd ..", shell=True)
-        subprocess.check_output("./build/%s_%s -v 0 -t 100 -f %s -n 1 -N %d" % (base, ap, '%s_%d.csv' % (ap, N), N), shell=True, stderr=subprocess.STDOUT)
+        if ap == 'satlqr':
+            subprocess.check_output("./satlqr_codegen.py -N %d" % N, shell=True)
+        if ap == 'lqr':
+            subprocess.check_output("./lqr_codegen.py -N %d" % N, shell=True)
+        subprocess.check_output("cd build && make && cd ..", shell=True)
+        subprocess.check_output("./build/%s_%s -v 0 -t 1 -f %s -n 1 -N %d" % (base, ap, '%s_%d.csv' % (ap, N), N), shell=True, stderr=subprocess.STDOUT)
 
     data = {}
     for ap in approaches:
@@ -47,12 +51,20 @@ for N in horizons:
     for ap in approaches:
         print '\t* %s' % ap
         print '\t\t- average solve time = %.3g s' % (sum([ts for ts in data[ap]['ts']])/len(data[ap]['ts']))
-        if ap != 'rtpgm' and 'rtpgm' in approaches:
-            rho = 1e5
+        if (ap == 'qpoases' or ap == 'hpmpc') and 'rtpgm' in approaches:
+            rho = 1e4
             r = 0.12
             obj_ap = sum(rho*(r - data[ap]['pendulum_position'])**2 + data[ap]['u']**2)
             obj_rtpgm = sum(rho*(r - data['rtpgm']['pendulum_position'])**2 + data['rtpgm']['u']**2)
-            print '\t\t- relative objective deviation of rtpgm = %f %%' % ((obj_rtpgm - obj_ap)*100/obj_ap)
+            print '\t\t- relative objective deviation of rtpgm wrt optimal MPC = %f %%' % ((obj_rtpgm - obj_ap)*100/obj_ap)
+        if (ap == 'qpoases' or ap == 'hpmpc') and 'satlqr' in approaches:
+            rho = 1e5
+            r = 0.12
+            obj_ap = sum(rho*(r - data[ap]['pendulum_position'])**2 + data[ap]['u']**2)
+            obj_satlqr = sum(rho*(r - data['satlqr']['pendulum_position'])**2 + data['satlqr']['u']**2)
+            print '\t\t- relative objective deviation of satlqr wrt optimal MPC = %f %%' % ((obj_satlqr - obj_ap)*100/obj_ap)
+
+
     print '\n--------------------------------------------------------------------------\n'
     # plot results
     tmax = 1
@@ -85,7 +97,7 @@ for N in horizons:
     plt.xlabel('t (s)')
     plt.ylabel('t_s (s)')
     plt.subplot(6, 1, 6)
-    plt.plot(data['rtpgm']['t'], data['rtpgm']['n_it_proj'])
+    # plt.plot(data['rtpgm']['t'], data['rtpgm']['n_it_proj'])
     plt.xlim([0, tmax])
     plt.xlabel('t (s)')
     plt.ylabel('n_proj (s)')

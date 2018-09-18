@@ -7,6 +7,8 @@ include_directories(${ACADOS_INCLUDE_DIRS})
 
 add_executable(mecotron_step_rtpgm src/mecotron_step_rtpgm.cpp)
 add_executable(mecotron_step_pgm src/mecotron_step_pgm.cpp)
+add_executable(mecotron_step_satlqr src/mecotron_step_satlqr.cpp)
+add_executable(mecotron_step_lqr src/mecotron_step_lqr.cpp)
 add_executable(mecotron_step_qpoases src/mecotron_step_qpoases.cpp)
 add_executable(mecotron_step_hpmpc src/mecotron_step_hpmpc.cpp)
 
