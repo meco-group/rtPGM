@@ -28,7 +28,6 @@ def get_dict(file):
 approaches = [False, True, True]
 
 n_steps = [2, 3, 4, 5, 6, 7, 8, 9, 10]
-n_steps = [2]
 # default model
 Ts = 0.02
 Ac, Bc, Cc, Dc = load_model('../data/mecotron.txt')
@@ -56,7 +55,7 @@ n_it = 100
 # reference objective
 controller = rtPGM(A1, B1, C1, D1, Q, R, umin, umax, N, terminal_constraint_tol=1e-8)
 controller.codegen('src/rtPGM.h', time_analysis=True)
-nonlinear_codegen(g, c, l, tau, Ts, Ts/100, Tf, CC.dot(Tf), DD, 'mecotron_nl', 'src/mecotron_nl.h')
+nonlinear_codegen(g, c, l, tau, Ts, Ts/10, Tf, CC.dot(Tf), DD, 'mecotron_nl', 'src/mecotron_nl.h')
 lti_codegen(A1, B1, CC, DD, Q, R, [umin], [umax], controller.Tx, controller.Su.T, Ts, 'mecotron', 'src/mecotron.h')
 subprocess.check_output("cd build && make && cd ..", shell=True)
 subprocess.check_output("./build/mecotron_step_rtpgm -v 1 -t 1 -f %s -n 1 -i %d" % ('mecotron_step_rtpgm.csv', n_it), shell=True, stderr=subprocess.STDOUT)
@@ -76,7 +75,7 @@ for ns in n_steps:
         D2 = np.c_[DD[2, :]].T
         controller2 = rtPGM(A2, B2, C2, D2, Q, R, umin, umax, N2, terminal_constraint_tol=1e-8)
         controller2.codegen('src/rtPGM.h', time_analysis=True)
-        nonlinear_codegen(g, c, l, tau, Ts2, Ts2/100, Tf, CC.dot(Tf), DD, 'mecotron_nl', 'src/mecotron_nl.h')
+        nonlinear_codegen(g, c, l, tau, Ts2, Ts2/10, Tf, CC.dot(Tf), DD, 'mecotron_nl', 'src/mecotron_nl.h')
         lti_codegen(A2, B2, CC, DD, Q, R, [umin], [umax], controller2.Tx, controller2.Su.T, Ts2, 'mecotron', 'src/mecotron.h')
         subprocess.check_output("cd build && make && cd ..", shell=True)
         subprocess.check_output("./build/mecotron_step_rtpgm -v 1 -t 1 -f %s -n 1 -i %d" % ('mecotron_step_rtpgm_%dit_a.csv' % (ns), n_it2), shell=True, stderr=subprocess.STDOUT)
@@ -90,7 +89,7 @@ for ns in n_steps:
         D2 = np.c_[DD[2, :]].T
         controller2 = rtPGM(A2, B2, C2, D2, Q, R, umin, umax, N2, terminal_constraint_tol=1e-8)
         controller2.codegen('src/rtPGM.h', time_analysis=True)
-        nonlinear_codegen(g, c, l, tau, Ts2, Ts2/100, Tf, CC.dot(Tf), DD, 'mecotron_nl', 'src/mecotron_nl.h')
+        nonlinear_codegen(g, c, l, tau, Ts2, Ts2/10, Tf, CC.dot(Tf), DD, 'mecotron_nl', 'src/mecotron_nl.h')
         lti_codegen(A2, B2, CC, DD, Q, R, [umin], [umax], controller2.Tx, controller2.Su.T, Ts2, 'mecotron', 'src/mecotron.h')
         subprocess.check_output("cd build && make && cd ..", shell=True)
         subprocess.check_output("./build/mecotron_step_rtpgm -v 1 -t 1 -f %s -n 1 -i %d" % ('mecotron_step_rtpgm_%dit_b.csv' % (ns), n_it2), shell=True, stderr=subprocess.STDOUT)
@@ -101,7 +100,7 @@ for ns in n_steps:
         n_it2 = n_it
         controller2 = PGM(A1, B1, C1, D1, Q, R, umin, umax, N2, terminal_constraint_tol=1e-8, max_iter=ns, tol=1e-16)
         controller2.codegen('src/PGM.h')
-        nonlinear_codegen(g, c, l, tau, Ts2, Ts2/100, Tf, CC.dot(Tf), DD, 'mecotron_nl', 'src/mecotron_nl.h')
+        nonlinear_codegen(g, c, l, tau, Ts2, Ts2/10, Tf, CC.dot(Tf), DD, 'mecotron_nl', 'src/mecotron_nl.h')
         lti_codegen(A2, B2, CC, DD, Q, R, [umin], [umax], controller2.Tx, controller2.Su.T, Ts2, 'mecotron', 'src/mecotron.h')
         subprocess.check_output("cd build && make && cd ..", shell=True)
         subprocess.check_output("./build/mecotron_step_pgm -v 1 -t 1 -f %s -n 1 -i %d" % ('mecotron_step_pgm_%dit.csv' % (ns), n_it2), shell=True, stderr=subprocess.STDOUT)

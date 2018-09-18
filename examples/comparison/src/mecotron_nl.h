@@ -9,10 +9,10 @@ class Mecotron_nl {
 			for (int k=0; k<4; ++k) {
 				x_prev[k] = _x[k];
 			}
-			_x[0] = x_prev[0] + 0.002000*x_prev[1];
-			_x[1] = x_prev[1] + (0.020000)*(-x_prev[1] + u[0]);
-			_x[2] = x_prev[2] + 0.002000*x_prev[3];
-			_x[3] = x_prev[3] + (0.015385)*((cos(x_prev[2])/0.100000)*(-x_prev[1] + u[0]) - 9.810000*sin(x_prev[2]) - 0.195500*x_prev[3]);
+			_x[0] = x_prev[0] + 0.000200*x_prev[1];
+			_x[1] = x_prev[1] + (0.002000)*(-x_prev[1] + u[0]);
+			_x[2] = x_prev[2] + 0.000200*x_prev[3];
+			_x[3] = x_prev[3] + (0.001538)*((cos(x_prev[2])/0.100000)*(-x_prev[1] + u[0]) - 9.810000*sin(x_prev[2]) - 0.195500*x_prev[3]);
 		}
 	public:
 		Mecotron_nl() {
@@ -24,7 +24,7 @@ class Mecotron_nl {
 			}
 		}
 		void update(float* u) {
-			for (int k=0; k<10; k++) {
+			for (int k=0; k<100; k++) {
 				update1(u);
 			}
 		}
